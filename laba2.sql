@@ -1,132 +1,83 @@
---
--- File generated with SQLiteStudio v3.1.0 on �� ��� 9 17:00:38 2023
---
--- Text encoding used: System
---
-PRAGMA foreign_keys = off;
-BEGIN TRANSACTION;
-
--- Table: Sat_Disciplines
-CREATE TABLE Sat_Disciplines (
-    DisciplineSatKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    DisciplineKey INTEGER,
-    DisciplineName TEXT,
-    Description TEXT,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание хранилища для сущности "Клиент"
+CREATE TABLE hub_customer (
+    customer_id INT NOT NULL AUTO_INCREMENT,
+    customer_code VARCHAR(50) NOT NULL,
+    load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+    record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (customer_id)
 );
 
--- Table: Sat_Teams
-CREATE TABLE Sat_Teams (
-    TeamSatKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    TeamKey INTEGER,
-    TeamName TEXT,
-    CoachName TEXT,
-    TeamLocation TEXT,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание хранилища для сущности "Товар"
+CREATE TABLE hub_product (
+    product_id INT NOT NULL AUTO_INCREMENT,
+    product_code VARCHAR(50) NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    product_category VARCHAR(50) NOT NULL,
+load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (product_id)
 );
 
--- Table: Sat_Participants
-CREATE TABLE Sat_Participants (
-    ParticipantSatKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    ParticipantKey INTEGER,
-    FirstName TEXT,
-    LastName TEXT,
-    DateOfBirth DATE,
-    Gender TEXT,
-    TeamKey INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание хранилища для связи между клиентом и товаром через продажу
+CREATE TABLE link_sales (
+    sales_id INT NOT NULL AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    sales_date DATE NOT NULL,
+load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (sales_id),
+    FOREIGN KEY (customer_id) REFERENCES hub_customer(customer_id),
+    FOREIGN KEY (product_id) REFERENCES hub_product(product_id)
 );
 
--- Table: Sat_SportingEvents
-CREATE TABLE Sat_SportingEvents (
-    SportingEventSatKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    SportingEventKey INTEGER,
-    EventName TEXT,
-    StartDate DATE,
-    EndDate DATE,
-    Location TEXT,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание сателлита для хранения истории изменений клиентов
+CREATE TABLE sat_customer (
+    customer_id INT NOT NULL,
+    valid_from DATE NOT NULL,
+    valid_to DATE,
+    is_current BOOLEAN NOT NULL DEFAULT TRUE,
+    customer_address VARCHAR(200),
+    customer_phone VARCHAR(20),
+    customer_email VARCHAR(50),
+load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (customer_id, valid_from),
+    FOREIGN KEY (customer_id) REFERENCES hub_customer(customer_id)
 );
 
--- Table: Sat_Results
-CREATE TABLE Sat_Results (
-    ResultSatKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    SportingEventKey INTEGER,
-    DisciplineKey INTEGER,
-    ParticipantKey INTEGER,
-    ResultTime REAL,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание сателлита для хранения истории изменений товаров
+CREATE TABLE sat_product (
+    product_id INT NOT NULL,
+    valid_from DATE NOT NULL,
+    valid_to DATE,
+    is_current BOOLEAN NOT NULL DEFAULT TRUE,
+    product_description TEXT,
+    product_price NUMERIC(10,2),
+load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (product_id, valid_from),
+    FOREIGN KEY (product_id) REFERENCES hub_product(product_id)
 );
 
--- Table: Link_SportingEvents_Teams
-CREATE TABLE Link_SportingEvents_Teams (
-    SportingEventKey INTEGER,
-    TeamKey INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT,
-    PRIMARY KEY (SportingEventKey, TeamKey),
-    FOREIGN KEY (SportingEventKey) REFERENCES Hub_SportingEvents (SportingEventKey),
-    FOREIGN KEY (TeamKey) REFERENCES Hub_Teams (TeamKey)
+-- Создание таблицы для хранения метаданных
+CREATE TABLE dv_metadata (
+    object_type VARCHAR(50) NOT NULL,
+    object_name VARCHAR(100) NOT NULL,
+    attribute_name VARCHAR(100),
+    attribute_value TEXT,
+    load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (object_type, object_name, attribute_name, load_date)
 );
 
--- Table: Hub_Disciplines
-CREATE TABLE Hub_Disciplines (
-    DisciplineKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    DisciplineID INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT
+-- Создание таблицы для хранения истории изменений
+CREATE TABLE dv_audit (
+    table_name VARCHAR(100) NOT NULL,
+    operation_type VARCHAR(10) NOT NULL,
+    operation_date TIMESTAMP NOT NULL DEFAULT NOW(),
+    user_name VARCHAR(50),
+load_date TIMESTAMP NOT NULL DEFAULT NOW(),
+record_surce VARCHAR(50) NOT NULL,
+    PRIMARY KEY (table_name, operation_type, operation_date)
 );
-
--- Table: Link_SportingEvents_Participants
-CREATE TABLE Link_SportingEvents_Participants (
-    SportingEventKey INTEGER,
-    ParticipantKey INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT,
-    PRIMARY KEY (SportingEventKey, ParticipantKey),
-    FOREIGN KEY (SportingEventKey) REFERENCES Hub_SportingEvents (SportingEventKey),
-    FOREIGN KEY (ParticipantKey) REFERENCES Hub_Participants (ParticipantKey)
-);
-
--- Table: Hub_Participants
-CREATE TABLE Hub_Participants (
-    ParticipantKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    ParticipantID INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT
-);
-
--- Table: Hub_Teams
-CREATE TABLE Hub_Teams (
-    TeamKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    TeamID INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT
-);
-
--- Table: Link_SportingEvents_Disciplines
-CREATE TABLE Link_SportingEvents_Disciplines (
-    SportingEventKey INTEGER,
-    DisciplineKey INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT,
-    PRIMARY KEY (SportingEventKey, DisciplineKey),
-    FOREIGN KEY (SportingEventKey) REFERENCES Hub_SportingEvents (SportingEventKey),
-    FOREIGN KEY (DisciplineKey) REFERENCES Hub_Disciplines (DisciplineKey)
-);
-
--- Table: Hub_SportingEvents
-CREATE TABLE Hub_SportingEvents (
-    SportingEventKey INTEGER PRIMARY KEY AUTOINCREMENT,
-    EventID INTEGER,
-    LoadDate DATETIME,
-    RecordSource TEXT
-);
-
-COMMIT TRANSACTION;
-PRAGMA foreign_keys = on;
